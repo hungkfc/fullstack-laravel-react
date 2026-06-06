@@ -32,18 +32,18 @@ jobs:
 
     - name: Install Dependencies
       run: |
-        cd backend
+        cd learn-laravel-react
         composer install --prefer-dist --no-progress
 
     - name: Prepare Configuration and App Key
       run: |
-        cd backend
+        cd learn-laravel-react
         cp .env.example .env
         php artisan key:generate
 
     - name: Configure Test Environment Variables
       run: |
-        cd backend
+        cd learn-laravel-react
         sed -i 's/DB_HOST=127.0.0.1/DB_HOST=127.0.0.1/g' .env
         sed -i 's/DB_DATABASE=laravel/DB_DATABASE=book_db_test/g' .env
         sed -i 's/DB_USERNAME=root/DB_USERNAME=root/g' .env
@@ -51,6 +51,6 @@ jobs:
 
     - name: Run Migrations and Execute Tests
       run: |
-        cd backend
+        cd learn-laravel-react
         php artisan migrate --force
         php artisan test
