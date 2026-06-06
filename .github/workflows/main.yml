@@ -1,0 +1,56 @@
+name: Backend Continuous Integration
+
+on:
+  push:
+    branches: [ "main" ]
+  pull_request:
+    branches: [ "main" ]
+
+jobs:
+  laravel-tests:
+    runs-on: ubuntu-latest
+
+    # Dựng sẵn một con máy chủ MySQL ảo trên GitHub để chạy test
+    services:
+      mysql:
+        image: mysql:8.0
+        env:
+          MYSQL_ALLOW_EMPTY_PASSWORD: yes
+          MYSQL_DATABASE: book_db_test
+        ports:
+          - 3306:3306
+        options: --health-cmd="mysqladmin ping" --health-interval=10s --health-timeout=5s --health-retries=3
+
+    steps:
+    - uses: actions/checkout@v4
+
+    - name: Setup PHP Environment
+      uses: shivammathur/setup-php@v2
+      with:
+        php-version: '8.4'
+        extensions: mbstring, dom, curl, libxml, mysql, pdo_mysql
+
+    - name: Install Dependencies
+      run: |
+        cd learn-laravel-react
+        composer install --prefer-dist --no-progress
+
+    - name: Prepare Configuration and App Key
+      run: |
+        cd learn-laravel-react
+        cp .env.example .env
+        php artisan key:generate
+
+    - name: Configure Test Environment Variables
+      run: |
+        cd learn-laravel-react
+        sed -i 's/DB_HOST=127.0.0.1/DB_HOST=127.0.0.1/g' .env
+        sed -i 's/DB_DATABASE=laravel/DB_DATABASE=book_db_test/g' .env
+        sed -i 's/DB_USERNAME=root/DB_USERNAME=root/g' .env
+        sed -i 's/DB_PASSWORD=/DB_PASSWORD=/g' .env
+
+    - name: Run Migrations and Execute Tests
+      run: |
+        cd learn-laravel-react
+        php artisan migrate --force
+        php artisan test
